@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tu & Zhang · 幸运抽奖</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Dancing+Script:wght@700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --red-deep: #8B1A1A;
+    --red-primary: #B22222;
+    --red-light: #D4453A;
+    --red-glow: #E8534A;
+    --gold: #C9956B;
+    --gold-light: #DEB887;
+    --cream: #FDF5E6;
+    --cream-dark: #F5E6D0;
+    --text-dark: #4A2020;
+    --text-light: #FDF5E6;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    font-family: 'Noto Serif SC', serif;
+    background: var(--cream);
+    color: var(--text-dark);
+  }
+
+  /* ===== 彩色纸屑 ===== */
+  .confetti-container {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+  }
+  .confetti {
+    position: absolute;
+    width: 8px; height: 14px;
+    opacity: 0.7;
+    animation: confettiFall linear infinite;
+  }
+  @keyframes confettiFall {
+    0% { transform: translateY(-20px) rotate(0deg); opacity: 0.8; }
+    100% { transform: translateY(105vh) rotate(720deg); opacity: 0.3; }
+  }
+
+  /* ===== 主容器 ===== */
+  .page {
+    position: relative; z-index: 1;
+    width: 100%; height: 100vh;
+    display: flex; flex-direction: column;
+    padding: 2vh 3vw 1.5vh;
+  }
+
+  /* ===== 顶部标题 ===== */
+  .header {
+    text-align: center;
+    flex-shrink: 0;
+    padding-bottom: 1vh;
+    position: relative;
+  }
+  .header-xi {
+    position: absolute;
+    left: 3vw; top: 50%;
+    transform: translateY(-50%);
+    font-size: 5vh;
+    color: var(--red-primary);
+    opacity: 0.15;
+    font-weight: 900;
+  }
+  .header-xi-r {
+    position: absolute;
+    right: 3vw; top: 50%;
+    transform: translateY(-50%);
+    font-size: 5vh;
+    color: var(--red-primary);
+    opacity: 0.15;
+    font-weight: 900;
+  }
+  .header h1 {
+    font-size: 4.2vh;
+    font-weight: 900;
+    color: var(--red-primary);
+    letter-spacing: 0.2em;
+    margin-bottom: 0.2vh;
+  }
+  .header .couple-name {
+    font-family: 'Dancing Script', cursive;
+    font-size: 2.2vh;
+    color: var(--gold);
+    letter-spacing: 0.1em;
+  }
+  .header .subtitle {
+    font-size: 1.5vh;
+    color: var(--red-light);
+    letter-spacing: 0.15em;
+    margin-top: 0.3vh;
+  }
+
+  /* 装饰线 */
+  .divider {
+    width: 50%; height: 2px; margin: 0.8vh auto;
+    background: linear-gradient(90deg, transparent, var(--gold), var(--red-light), var(--gold), transparent);
+    border-radius: 1px;
+    position: relative;
+  }
+  .divider::after {
+    content: '❤';
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--cream);
+    padding: 0 1vw;
+    color: var(--red-primary);
+    font-size: 1.4vh;
+  }
+
+  /* ===== 中间主体 ===== */
+  .main {
+    flex: 1;
+    display: flex;
+    gap: 2.5vw;
+    min-height: 0;
+    padding-top: 0.5vh;
+  }
+
+  /* --- 左侧：抽奖区 --- */
+  .lottery-section {
+    flex: 1.15;
+    display: flex; flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5vh;
+    background: linear-gradient(145deg, rgba(178,34,34,0.04), rgba(178,34,34,0.01));
+    border: 1.5px solid rgba(178,34,34,0.12);
+    border-radius: 20px;
+    padding: 1.5vh 1.5vw;
+    position: relative;
+    overflow: hidden;
+  }
+  /* 角标装饰 */
+  .lottery-section::before,
+  .lottery-section::after {
+    content: '囍';
+    position: absolute;
+    font-size: 8vh;
+    color: var(--red-primary);
+    opacity: 0.04;
+    font-weight: 900;
+  }
+  .lottery-section::before { top: -1vh; left: -1vw; }
+  .lottery-section::after { bottom: -1vh; right: -1vw; }
+
+  .lottery-label {
+    font-size: 2vh;
+    color: var(--red-primary);
+    letter-spacing: 0.2em;
+    font-weight: 700;
+  }
+
+  /* 数字网格 */
+  .numbers-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.2vh 1.2vw;
+    width: 92%;
+    max-width: 480px;
+  }
+  .number-cell {
+    aspect-ratio: 1.4;
+    background: #fff;
+    border: 2px solid rgba(178,34,34,0.15);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3.5vh;
+    font-weight: 900;
+    color: rgba(178,34,34,0.2);
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(139,26,26,0.06);
+  }
+  .number-cell.rolling {
+    animation: cellPulse 0.12s infinite alternate;
+    color: var(--red-light);
+    border-color: var(--red-light);
+    background: rgba(178,34,34,0.04);
+  }
+  @keyframes cellPulse {
+    0% { transform: scale(1); }
+    100% { transform: scale(0.96); }
+  }
+  .number-cell.revealed {
+    color: #fff;
+    border-color: var(--red-primary);
+    background: linear-gradient(135deg, var(--red-primary), var(--red-light));
+    box-shadow: 0 4px 16px rgba(178,34,34,0.3);
+    transform: scale(1.04);
+  }
+  .number-cell.revealed::after {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+    pointer-events: none;
+  }
+
+  /* 抽奖按钮 */
+  .btn-draw {
+    margin-top: 0.5vh;
+    padding: 1.4vh 5vw;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 2.2vh;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--text-light);
+    background: linear-gradient(135deg, var(--red-primary), var(--red-light));
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(178,34,34,0.35);
+  }
+  .btn-draw:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 30px rgba(178,34,34,0.5);
+  }
+  .btn-draw:active { transform: translateY(0); }
+  .btn-draw:disabled {
+    opacity: 0.5; cursor: not-allowed; transform: none;
+    box-shadow: 0 2px 8px rgba(178,34,34,0.15);
+  }
+  .btn-draw .shine {
+    position: absolute; top: -50%; left: -100%;
+    width: 50%; height: 200%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transform: skewX(-25deg);
+    animation: btnShine 3s infinite;
+  }
+  @keyframes btnShine {
+    0%, 100% { left: -100%; }
+    50% { left: 150%; }
+  }
+
+  /* --- 右侧：奖品区 --- */
+  .prizes-section {
+    flex: 0.85;
+    display: flex; flex-direction: column;
+    gap: 0.8vh;
+  }
+  .prizes-label {
+    font-size: 2vh;
+    color: var(--red-primary);
+    letter-spacing: 0.2em;
+    text-align: center;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .prizes-hint {
+    font-size: 1.3vh;
+    color: var(--gold);
+    text-align: center;
+    flex-shrink: 0;
+    letter-spacing: 0.1em;
+  }
+
+  .prizes-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 1vh 1vw;
+    min-height: 0;
+  }
+
+  .prize-card {
+    background: #fff;
+    border: 1.5px solid rgba(178,34,34,0.1);
+    border-radius: 14px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 0.5vh;
+    padding: 0.8vh 0.5vw;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(139,26,26,0.05);
+    position: relative;
+    overflow: hidden;
+  }
+  .prize-card:hover {
+    border-color: var(--red-light);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(178,34,34,0.12);
+  }
+  .prize-card .prize-icon {
+    font-size: 3.8vh;
+    line-height: 1;
+  }
+  .prize-card .prize-name {
+    font-size: 1.4vh;
+    font-weight: 600;
+    color: var(--text-dark);
+    text-align: center;
+    line-height: 1.3;
+  }
+  .prize-card .prize-qty {
+    font-size: 1.1vh;
+    color: var(--gold);
+    font-weight: 600;
+  }
+
+  /* ===== 底部 ===== */
+  .footer {
+    flex-shrink: 0;
+    text-align: center;
+    padding: 0.5vh 0 0;
+    font-size: 1.2vh;
+    color: var(--gold);
+    letter-spacing: 0.15em;
+  }
+  .footer .date {
+    font-family: 'Dancing Script', cursive;
+    font-size: 1.5vh;
+    color: var(--red-light);
+  }
+
+  /* ===== 烟花 ===== */
+  .firework {
+    position: fixed;
+    pointer-events: none;
+    z-index: 100;
+  }
+  .firework-particle {
+    position: absolute;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    animation: fwBurst 1.2s ease-out forwards;
+  }
+  @keyframes fwBurst {
+    0% { transform: translate(0,0) scale(1); opacity: 1; }
+    100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
+  }
+
+  /* ===== 结果弹窗 ===== */
+  .result-overlay {
+    position: fixed; inset: 0;
+    background: rgba(80,20,20,0.6);
+    display: none; align-items: center; justify-content: center;
+    z-index: 200;
+    backdrop-filter: blur(6px);
+  }
+  .result-overlay.show { display: flex; }
+  .result-card {
+    background: var(--cream);
+    border: 3px solid var(--red-primary);
+    border-radius: 24px;
+    padding: 3.5vh 4vw;
+    text-align: center;
+    animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 0 60px rgba(178,34,34,0.3);
+    max-width: 75vw;
+    position: relative;
+    overflow: hidden;
+  }
+  .result-card::before {
+    content: '囍';
+    position: absolute;
+    font-size: 20vh;
+    color: var(--red-primary);
+    opacity: 0.04;
+    font-weight: 900;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  @keyframes popIn {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .result-card h2 {
+    font-size: 3vh;
+    color: var(--red-primary);
+    margin-bottom: 2vh;
+    letter-spacing: 0.2em;
+    position: relative;
+  }
+  .result-numbers {
+    display: flex; flex-wrap: wrap;
+    justify-content: center;
+    gap: 1vh 0.8vw;
+    margin-bottom: 2vh;
+    position: relative;
+  }
+  .result-numbers span {
+    background: linear-gradient(135deg, var(--red-primary), var(--red-light));
+    color: #fff;
+    font-size: 2.8vh;
+    font-weight: 900;
+    width: 5.5vh; height: 5.5vh;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 10px;
+    box-shadow: 0 3px 12px rgba(178,34,34,0.25);
+  }
+  .result-hint {
+    font-size: 1.5vh;
+    color: var(--text-dark);
+    margin-bottom: 2vh;
+    line-height: 1.8;
+    position: relative;
+  }
+  .result-hint b { color: var(--red-primary); }
+  .btn-close {
+    padding: 1vh 3vw;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 1.6vh;
+    color: var(--text-light);
+    background: linear-gradient(135deg, var(--red-primary), var(--red-light));
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+  .btn-close:hover { box-shadow: 0 4px 20px rgba(178,34,34,0.4); }
+
+  /* ===== 设置面板 ===== */
+  .settings-toggle {
+    position: fixed; top: 2vh; left: 2vw;
+    z-index: 50;
+    width: 3.5vh; height: 3.5vh;
+    border-radius: 50%;
+    background: rgba(178,34,34,0.08);
+    border: 1px solid rgba(178,34,34,0.15);
+    color: var(--red-primary);
+    font-size: 1.6vh;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.3s ease;
+  }
+  .settings-toggle:hover { background: rgba(178,34,34,0.12); }
+
+  .settings-panel {
+    position: fixed; top: 7vh; left: 2vw;
+    z-index: 50;
+    background: var(--cream);
+    border: 1.5px solid rgba(178,34,34,0.2);
+    border-radius: 14px;
+    padding: 2vh 1.5vw;
+    display: none;
+    min-width: 220px;
+    box-shadow: 0 8px 30px rgba(139,26,26,0.12);
+  }
+  .settings-panel.show { display: block; }
+  .settings-panel label {
+    display: block;
+    font-size: 1.4vh;
+    color: var(--text-dark);
+    margin-bottom: 0.4vh;
+    font-weight: 600;
+  }
+  .settings-panel input {
+    width: 100%;
+    padding: 0.6vh 0.8vw;
+    background: #fff;
+    border: 1.5px solid rgba(178,34,34,0.15);
+    border-radius: 8px;
+    color: var(--text-dark);
+    font-size: 1.4vh;
+    margin-bottom: 1vh;
+    font-family: 'Noto Serif SC', serif;
+  }
+  .settings-panel input:focus {
+    outline: none;
+    border-color: var(--red-primary);
+  }
+  .settings-panel .btn-save {
+    padding: 0.6vh 2vw;
+    background: linear-gradient(135deg, var(--red-primary), var(--red-light));
+    border: none;
+    border-radius: 20px;
+    color: var(--text-light);
+    font-weight: 700;
+    font-size: 1.3vh;
+    cursor: pointer;
+    font-family: 'Noto Serif SC', serif;
+    letter-spacing: 0.1em;
+    transition: all 0.3s ease;
+  }
+  .settings-panel .btn-save:hover {
+    box-shadow: 0 3px 12px rgba(178,34,34,0.3);
+  }
+
+  /* ===== 音效按钮 ===== */
+  .sound-toggle {
+    position: fixed; top: 2vh; right: 2vw;
+    z-index: 50;
+    width: 3.5vh; height: 3.5vh;
+    border-radius: 50%;
+    background: rgba(178,34,34,0.08);
+    border: 1px solid rgba(178,34,34,0.15);
+    color: var(--red-primary);
+    font-size: 1.6vh;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.3s ease;
+  }
+  .sound-toggle:hover { background: rgba(178,34,34,0.12); }
+</style>
+</head>
+<body>
+
+<!-- 彩色纸屑 -->
+<div class="confetti-container" id="confettiContainer"></div>
+
+<!-- 设置按钮 -->
+<button class="settings-toggle" id="settingsToggle" title="设置">⚙</button>
+<div class="settings-panel" id="settingsPanel">
+  <label>号码范围上限（宾客编号）</label>
+  <input type="number" id="inputMaxNumber" value="31" min="1" max="999" />
+  <label>每轮抽取数量</label>
+  <input type="number" id="inputDrawCount" value="12" min="1" max="99" />
+  <button class="btn-save" onclick="saveSettings()">保 存</button>
+</div>
+
+<!-- 音效开关 -->
+<button class="sound-toggle" id="soundToggle" title="音效">🔔</button>
+
+<!-- 页面 -->
+<div class="page">
+
+  <!-- 标题 -->
+  <div class="header">
+    <div class="header-xi">囍</div>
+    <div class="header-xi-r">囍</div>
+    <h1>🎊 幸运时刻 🎊</h1>
+    <div class="couple-name">Tu & Zhang · Welcome to our wedding</div>
+    <div class="subtitle">刮出幸运 · 刮出惊喜 · 100% 中奖</div>
+  </div>
+  <div class="divider"></div>
+
+  <!-- 主体 -->
+  <div class="main">
+
+    <!-- 左侧：抽奖区 -->
+    <div class="lottery-section">
+      <div class="lottery-label">✨ 幸运号码 ✨</div>
+      <div class="numbers-grid" id="numbersGrid"></div>
+      <button class="btn-draw" id="btnDraw" onclick="startDraw()">
+        <span class="shine"></span>
+        开 始 抽 奖
+      </button>
+    </div>
+
+    <!-- 右侧：奖品区 -->
+    <div class="prizes-section">
+      <div class="prizes-label">🎁 刮刮卡奖品 🎁</div>
+      <div class="prizes-hint">幸运宾客凭号码领取刮刮卡，刮开见惊喜</div>
+      <div class="prizes-grid" id="prizesGrid"></div>
+    </div>
+
+  </div>
+
+  <!-- 底部 -->
+  <div class="footer">
+    <div class="date">2026.5.2</div>
+    ❤ 感谢各位亲友的祝福与见证 ❤
+  </div>
+
+</div>
+
+<!-- 结果弹窗 -->
+<div class="result-overlay" id="resultOverlay">
+  <div class="result-card">
+    <h2>🎉 恭喜以下幸运号码 🎉</h2>
+    <div class="result-numbers" id="resultNumbers"></div>
+    <div class="result-hint">
+      请以上号码的宾客前往 <b>刮奖区</b> 领取刮刮卡<br/>
+      每张刮刮卡均含精美奖品，100% 中奖！
+    </div>
+    <button class="btn-close" onclick="closeResult()">知 道 啦</button>
+  </div>
+</div>
+
+<script>
+  // ========== 配置 ==========
+  let MAX_NUMBER = 31;
+  let DRAW_COUNT = 12;
+  let isDrawing = false;
+  let hasDrawn = false;
+  let soundOn = true;
+
+  // ========== 奖品数据 ==========
+  const prizes = [
+    { icon: '🍲', name: '苏泊尔珐琅锅（石榴红）', qty: '× 2' },
+    { icon: '💇', name: '徕芬吹风机（敦煌红）', qty: '× 2' },
+    { icon: '🧱', name: '乐高财神积木', qty: '× 2' },
+    { icon: '🦶', name: '折叠泡脚桶', qty: '× 2' },
+    { icon: '🍖', name: '王小卤抓财手', qty: '× 2' },
+    { icon: '🧋', name: '茶颜悦色大礼包', qty: '× 2' },
+  ];
+
+  // ========== 初始化 ==========
+  function init() {
+    createConfetti();
+    renderNumberGrid();
+    renderPrizes();
+  }
+
+  // 彩色纸屑（婚礼主视觉同款）
+  function createConfetti() {
+    const container = document.getElementById('confettiContainer');
+    const colors = [
+      '#B22222', '#D4453A', '#E8534A',   // 红色系
+      '#C9956B', '#DEB887',               // 金色系
+      '#6BAF7B', '#5DA0C9',               // 绿/蓝点缀
+      '#E8A0BF', '#F4C542',               // 粉/黄点缀
+    ];
+    for (let i = 0; i < 50; i++) {
+      const el = document.createElement('div');
+      el.className = 'confetti';
+      el.style.left = Math.random() * 100 + '%';
+      el.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      el.style.animationDuration = (6 + Math.random() * 8) + 's';
+      el.style.animationDelay = Math.random() * 8 + 's';
+      el.style.width = (4 + Math.random() * 6) + 'px';
+      el.style.height = (8 + Math.random() * 10) + 'px';
+      el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+      el.style.transform = `rotate(${Math.random() * 360}deg)`;
+      container.appendChild(el);
+    }
+  }
+
+  // 渲染数字网格
+  function renderNumberGrid() {
+    const grid = document.getElementById('numbersGrid');
+    grid.innerHTML = '';
+    for (let i = 0; i < DRAW_COUNT; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'number-cell';
+      cell.textContent = '?';
+      cell.id = 'cell-' + i;
+      grid.appendChild(cell);
+    }
+  }
+
+  // 渲染奖品
+  function renderPrizes() {
+    const grid = document.getElementById('prizesGrid');
+    grid.innerHTML = '';
+    prizes.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'prize-card';
+      card.innerHTML = `
+        <div class="prize-icon">${p.icon}</div>
+        <div class="prize-name">${p.name}</div>
+        <div class="prize-qty">${p.qty}</div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  // ========== 抽奖逻辑 ==========
+  function startDraw() {
+    if (isDrawing || hasDrawn) return;
+
+    const pool = [];
+    for (let i = 1; i <= MAX_NUMBER; i++) pool.push(i);
+
+    const selected = [];
+    for (let i = 0; i < DRAW_COUNT; i++) {
+      const idx = Math.floor(Math.random() * pool.length);
+      selected.push(pool[idx]);
+      pool.splice(idx, 1);
+    }
+    selected.sort((a, b) => a - b);
+
+    isDrawing = true;
+    document.getElementById('btnDraw').disabled = true;
+    document.getElementById('btnDraw').textContent = '抽 奖 中...';
+
+    // 播放激昂背景音乐
+    if (soundOn) startBGM();
+
+    const cells = document.querySelectorAll('.number-cell');
+    cells.forEach(cell => {
+      cell.textContent = '?';
+      cell.className = 'number-cell rolling';
+    });
+
+    let revealIndex = 0;
+    const rollInterval = setInterval(() => {
+      cells.forEach((cell, i) => {
+        if (i >= revealIndex) {
+          cell.textContent = Math.floor(Math.random() * MAX_NUMBER) + 1;
+        }
+      });
+    }, 80);
+
+    function revealNext() {
+      if (revealIndex >= DRAW_COUNT) {
+        clearInterval(rollInterval);
+        isDrawing = false;
+        hasDrawn = true;
+        const btn = document.getElementById('btnDraw');
+        btn.disabled = true;
+        btn.textContent = '🎉 抽 奖 完 成';
+        stopBGM();
+        if (soundOn) playCelebration();
+        launchFireworks();
+        setTimeout(() => showResult(selected), 600);
+        return;
+      }
+      const cell = cells[revealIndex];
+      cell.className = 'number-cell revealed';
+      cell.textContent = selected[revealIndex];
+      if (soundOn) playTick();
+      revealIndex++;
+      setTimeout(revealNext, 250 + Math.random() * 150);
+    }
+
+    setTimeout(revealNext, 1500);
+  }
+
+  // 重置（工作人员备用，双击标题触发）
+  function resetDraw() {
+    if (isDrawing) return;
+    hasDrawn = false;
+    renderNumberGrid();
+    const btn = document.getElementById('btnDraw');
+    btn.disabled = false;
+    btn.innerHTML = '<span class="shine"></span>开 始 抽 奖';
+  }
+
+  // ========== 结果弹窗 ==========
+  function showResult(numbers) {
+    const container = document.getElementById('resultNumbers');
+    container.innerHTML = '';
+    numbers.forEach(n => {
+      const span = document.createElement('span');
+      span.textContent = n;
+      container.appendChild(span);
+    });
+    document.getElementById('resultOverlay').classList.add('show');
+  }
+
+  function closeResult() {
+    document.getElementById('resultOverlay').classList.remove('show');
+  }
+
+  // ========== 烟花 ==========
+  function launchFireworks() {
+    for (let i = 0; i < 6; i++) {
+      setTimeout(() => {
+        createFirework(
+          Math.random() * window.innerWidth,
+          Math.random() * window.innerHeight * 0.5
+        );
+      }, i * 350);
+    }
+  }
+
+  function createFirework(x, y) {
+    const container = document.createElement('div');
+    container.className = 'firework';
+    container.style.left = x + 'px';
+    container.style.top = y + 'px';
+    document.body.appendChild(container);
+
+    const colors = ['#B22222', '#D4453A', '#C9956B', '#DEB887', '#E8A0BF', '#F4C542', '#6BAF7B', '#5DA0C9'];
+    for (let i = 0; i < 24; i++) {
+      const p = document.createElement('div');
+      p.className = 'firework-particle';
+      const angle = (Math.PI * 2 / 24) * i;
+      const dist = 50 + Math.random() * 80;
+      p.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+      p.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+      p.style.background = colors[Math.floor(Math.random() * colors.length)];
+      container.appendChild(p);
+    }
+    setTimeout(() => container.remove(), 1500);
+  }
+
+  // ========== 音频系统 ==========
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  let audioCtx;
+  let bgmPlaying = false;
+  let bgmNodes = [];
+
+  function ensureAudioCtx() {
+    if (!audioCtx) audioCtx = new AudioCtx();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  }
+
+  // 揭晓单个号码时的音效
+  function playTick() {
+    ensureAudioCtx();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.frequency.value = 800 + Math.random() * 500;
+    osc.type = 'triangle';
+    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.15);
+  }
+
+  // 激昂的鼓点背景音乐
+  function startBGM() {
+    if (bgmPlaying || !soundOn) return;
+    ensureAudioCtx();
+    bgmPlaying = true;
+
+    const bpm = 140;
+    const beatDur = 60 / bpm;
+    const t0 = audioCtx.currentTime + 0.05;
+
+    // 低音鼓
+    function kick(time) {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.frequency.setValueAtTime(150, time);
+      osc.frequency.exponentialRampToValueAtTime(40, time + 0.12);
+      gain.gain.setValueAtTime(0.35, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.2);
+      osc.start(time);
+      osc.stop(time + 0.2);
+      bgmNodes.push(osc);
+    }
+
+    // 军鼓 / 拍手
+    function snare(time) {
+      const bufferSize = audioCtx.sampleRate * 0.08;
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 3);
+      }
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+      const gain = audioCtx.createGain();
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.value = 2000;
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioCtx.destination);
+      gain.gain.setValueAtTime(0.2, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
+      noise.start(time);
+      noise.stop(time + 0.1);
+      bgmNodes.push(noise);
+    }
+
+    // 高音帽
+    function hihat(time) {
+      const bufferSize = audioCtx.sampleRate * 0.03;
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 5);
+      }
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+      const gain = audioCtx.createGain();
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.value = 8000;
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioCtx.destination);
+      gain.gain.setValueAtTime(0.08, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.04);
+      noise.start(time);
+      noise.stop(time + 0.04);
+      bgmNodes.push(noise);
+    }
+
+    // 上升音效（紧张感）
+    function riser(startTime, duration) {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(200, startTime);
+      osc.frequency.exponentialRampToValueAtTime(1200, startTime + duration);
+      gain.gain.setValueAtTime(0.02, startTime);
+      gain.gain.linearRampToValueAtTime(0.08, startTime + duration * 0.8);
+      gain.gain.linearRampToValueAtTime(0, startTime + duration);
+      osc.start(startTime);
+      osc.stop(startTime + duration);
+      bgmNodes.push(osc);
+    }
+
+    // 编排 8 小节（约 14 秒 @ 140bpm）
+    const totalBeats = 32;
+    for (let i = 0; i < totalBeats; i++) {
+      const t = t0 + i * beatDur;
+
+      // 每拍都有 hi-hat
+      hihat(t);
+      // 半拍加一个 hi-hat
+      hihat(t + beatDur * 0.5);
+
+      // 鼓点模式：强拍 kick
+      if (i % 4 === 0) kick(t);
+      // 第2.5拍加 kick（syncopation）
+      if (i % 4 === 2) kick(t + beatDur * 0.5);
+      // 反拍 snare
+      if (i % 4 === 1 || i % 4 === 3) snare(t);
+    }
+
+    // 上升音效贯穿
+    riser(t0, totalBeats * beatDur);
+
+    // 到时间自动停止
+    setTimeout(() => { bgmPlaying = false; bgmNodes = []; }, totalBeats * beatDur * 1000 + 500);
+  }
+
+  function stopBGM() {
+    bgmNodes.forEach(n => { try { n.stop(); } catch(e) {} });
+    bgmNodes = [];
+    bgmPlaying = false;
+  }
+
+  // 抽奖完成时的庆祝音效
+  function playCelebration() {
+    if (!soundOn) return;
+    ensureAudioCtx();
+    const notes = [523, 659, 784, 1047, 784, 1047, 1319];
+    notes.forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.frequency.value = freq;
+      osc.type = 'sine';
+      const t = audioCtx.currentTime + i * 0.12;
+      gain.gain.setValueAtTime(0.12, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+      osc.start(t);
+      osc.stop(t + 0.3);
+    });
+  }
+
+  // ========== 设置面板 ==========
+  document.getElementById('settingsToggle').addEventListener('click', () => {
+    document.getElementById('settingsPanel').classList.toggle('show');
+  });
+
+  function saveSettings() {
+    const max = parseInt(document.getElementById('inputMaxNumber').value) || 31;
+    const count = parseInt(document.getElementById('inputDrawCount').value) || 12;
+    MAX_NUMBER = Math.max(1, max);
+    DRAW_COUNT = Math.max(1, Math.min(count, MAX_NUMBER));
+    document.getElementById('inputMaxNumber').value = MAX_NUMBER;
+    document.getElementById('inputDrawCount').value = DRAW_COUNT;
+    // 重置
+    hasDrawn = false;
+    renderNumberGrid();
+    const btn = document.getElementById('btnDraw');
+    btn.disabled = false;
+    btn.innerHTML = '<span class="shine"></span>开 始 抽 奖';
+    // 动态调列数
+    const grid = document.getElementById('numbersGrid');
+    if (DRAW_COUNT <= 6) grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+    else if (DRAW_COUNT <= 16) grid.style.gridTemplateColumns = 'repeat(4, 1fr)';
+    else grid.style.gridTemplateColumns = 'repeat(5, 1fr)';
+    document.getElementById('settingsPanel').classList.remove('show');
+  }
+
+  // ========== 事件 ==========
+  document.getElementById('soundToggle').addEventListener('click', () => {
+    soundOn = !soundOn;
+    document.getElementById('soundToggle').textContent = soundOn ? '🔔' : '🔕';
+    if (!soundOn) stopBGM();
+  });
+
+  // 双击标题重置（工作人员备用）
+  document.querySelector('.header h1').addEventListener('dblclick', () => {
+    if (confirm('确定要重置抽奖吗？')) resetDraw();
+  });
+
+  // 点击遮罩关闭弹窗
+  document.getElementById('resultOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeResult();
+  });
+
+  // 快捷键
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && !isDrawing && !hasDrawn) {
+      e.preventDefault();
+      startDraw();
+    }
+    if (e.code === 'Escape') closeResult();
+  });
+
+  init();
+</script>
+
+</body>
+</html>
